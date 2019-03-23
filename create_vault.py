@@ -58,7 +58,7 @@ def main():
             print('Bad path given. Try again.')
             continue
         counter = counter + 1
-    print('Process complete/')
+    print('Process complete.')
 
 
 if __name__ == '__main__':
