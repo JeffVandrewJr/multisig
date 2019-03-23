@@ -26,14 +26,12 @@ def main():
     m = int(input('How many total signatures will be required (aka "m"): '))
     n = int(input('How many total keys do you want to generate (aka "n"): '))
     counter = 0
-    keypairs = []
+    privkeys = []
     pubkeys = []
     while counter <= n:
         privkey = CBitcoinSecret.from_secret_bytes(os.urandom(32))
         pubkey = privkey.pub
-        keypairs.append(
-                {'privkey': privkey, 'pubkey': pubkey}
-        )
+        privkeys.append(privkey)
         pubkeys.append(pubkey)
         counter = counter + 1
     redeem_script = generate_multisig_redeem_script(pubkeys, m)
@@ -41,7 +39,7 @@ def main():
             script.CScript(x(redeem_script))
         )
     counter = 1
-    while counter <= len(keypairs):
+    while counter <= len(privkeys):
         if counter == 1:
             input('Insert a USB Drive. Press any key when complete.')
         else:
@@ -52,9 +50,9 @@ def main():
                 )
         try:
             with open((os.path.join(path, f'key{counter}')), 'w') as key_file:
-                key_file.write(str(keypairs[(counter - 1)]))
+                key_file.write(str(privkeys[(counter - 1)]))
             with open((os.path.join(path, 'address')), 'w') as address_file:
-                address_file.write(address)
+                address_file.write(str(address))
         except Exception as e:
             print(e)
             print('Bad path given. Try again.')
