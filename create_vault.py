@@ -1,24 +1,19 @@
 import bitcoin
 from bitcoin.core import script, x
-from bitcoin.core.key import CECKey
-from bitcoin.wallet import P2SHBitcoinAddress
+from bitcoin.wallet import P2SHBitcoinAddress, CBitcoinSecret
 import os
 import subprocess
 
 
-def generate_multisig_redeem_script(keypairs, m):
+def generate_multisig_redeem_script(pubkeys, m):
     '''
     creates m of n multisig redeem script
-    keypairs is a list of dictionaries
-    each dictionary is a keypair with indices 'pubkey' & 'privkey'
+    pubkeys is a list of pubkeys
     m is the number of signatures required to redeem
     '''
-    pubkeys = []
-    for keypair in keypairs:
-        pubkeys.append(keypair['pubkey'])
     op_m = script.CScriptOp.encode_op_n(m)
     op_n = script.CScriptOp.encode_op_n(len(pubkeys))
-    redeem_list = [x(pubkey) for pubkey in pubkeys]
+    redeem_list = pubkeys
     redeem_list.insert(0, op_m)
     redeem_list.append(op_n)
     redeem_list.append(script.OP_CHECKMULTISIG)
@@ -26,18 +21,22 @@ def generate_multisig_redeem_script(keypairs, m):
     return redeem_script
 
 
-if __name__ == '__main__':
+def main():
     bitcoin.SelectParams('mainnet')
     m = int(input('How many total signatures will be required (aka "m"): '))
     n = int(input('How many total keys do you want to generate (aka "n"): '))
     counter = 0
     keypairs = []
+    pubkeys = []
     while counter <= n:
-        key = CECKey()
+        privkey = CBitcoinSecret.from_secret_bytes(os.urandom(32))
+        pubkey = privkey.pub
         keypairs.append(
-                {'privkey': key.get_privkey(), 'pubkey': key.get_pubkey()})
+                {'privkey': privkey, 'pubkey': pubkey}
+        )
+        pubkeys.append(pubkey)
         counter = counter + 1
-    redeem_script = generate_multisig_redeem_script(keypairs, m)
+    redeem_script = generate_multisig_redeem_script(pubkeys, m)
     address = P2SHBitcoinAddress.from_redeemScript(
             script.CScript(x(redeem_script))
         )
@@ -52,12 +51,17 @@ if __name__ == '__main__':
                 'Enter the drive path (ex: /run/media/root/sample): '
                 )
         try:
-            with open(os.path.join(path, f'key{counter}', 'w')) as key_file:
-                key_file.write(keypairs[(counter - 1)])
-            with open(os.path.join(path, 'address', 'w')) as address_file:
+            with open((os.path.join(path, f'key{counter}')), 'w') as key_file:
+                key_file.write(str(keypairs[(counter - 1)]))
+            with open((os.path.join(path, 'address')), 'w') as address_file:
                 address_file.write(address)
-        except Exception:
+        except Exception as e:
+            print(e)
             print('Bad path given. Try again.')
             continue
         counter = counter + 1
     print('Process complete/')
+
+
+if __name__ == '__main__':
+    main()
