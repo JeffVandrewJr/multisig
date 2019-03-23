@@ -28,7 +28,7 @@ def main():
     counter = 0
     privkeys = []
     pubkeys = []
-    while counter <= n:
+    while counter < n:
         privkey = CBitcoinSecret.from_secret_bytes(os.urandom(32))
         pubkey = privkey.pub
         privkeys.append(privkey)
