@@ -1,6 +1,7 @@
-import bitcoin
-from bitcoin.core import script, x
-from bitcoin.wallet import P2SHBitcoinAddress, CBitcoinSecret
+import bitcointx
+from bitcointx.core.script import CScript, CScriptOp, OP_0, OP_CHECKMULTISIG
+from bitcointx.wallet import P2WSHAddress, CBitcoinSecret
+from hashlib import sha256
 import os
 import subprocess
 
@@ -11,18 +12,18 @@ def generate_multisig_redeem_script(pubkeys, m):
     pubkeys is a list of pubkeys
     m is the number of signatures required to redeem
     '''
-    op_m = script.CScriptOp.encode_op_n(m)
-    op_n = script.CScriptOp.encode_op_n(len(pubkeys))
+    op_m = CScriptOp.encode_op_n(m)
+    op_n = CScriptOp.encode_op_n(len(pubkeys))
     redeem_list = pubkeys
     redeem_list.insert(0, op_m)
     redeem_list.append(op_n)
-    redeem_list.append(script.OP_CHECKMULTISIG)
-    redeem_script = script.CScript(redeem_list).hex()
+    redeem_list.append(OP_CHECKMULTISIG)
+    redeem_script = CScript(redeem_list)
     return redeem_script
 
 
 def main():
-    bitcoin.SelectParams('mainnet')
+    bitcointx.tSelectParams('mainnet')
     m = int(input('How many total signatures will be required (aka "m"): '))
     n = int(input('How many total keys do you want to generate (aka "n"): '))
     counter = 0
@@ -35,9 +36,8 @@ def main():
         pubkeys.append(pubkey)
         counter = counter + 1
     redeem_script = generate_multisig_redeem_script(pubkeys, m)
-    address = P2SHBitcoinAddress.from_redeemScript(
-            script.CScript(x(redeem_script))
-        )
+    script_pub_key = CScript([OP_0, sha256(redeem_script)])
+    address = P2WSHAddress.from_scriptPubKey(script_pub_key)
     counter = 1
     while counter <= len(privkeys):
         if counter == 1:
