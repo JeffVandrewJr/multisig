@@ -1,5 +1,8 @@
 import bitcointx
-from bitcointx.core.script import CScript, CScriptOp, OP_0, OP_CHECKMULTISIG
+from bitcointx.core import COutPoint, CMutableTxIn, CMutableTxOut, \
+        CMutableTransaction, CTxInWitness, lx, COIN
+from bitcointx.core.script import CScript, CScriptOp, CScriptWitness, \
+        OP_0, OP_CHECKMULTISIG
 from bitcointx.wallet import P2WSHBitcoinAddress, CBitcoinSecret
 from hashlib import sha256
 import os
@@ -19,8 +22,18 @@ def generate_multisig_redeem_script(pubkeys, m):
     redeem_list.insert(0, op_m)
     redeem_list.append(op_n)
     redeem_list.append(OP_CHECKMULTISIG)
-    redeem_script = CScript(redeem_list)
+    redeem_tuple = tuple(redeem_list)
+    redeem_script = CScriptWitness(redeem_tuple)
     return redeem_script
+
+
+def generate_transaction(amount, txin_txid, txin_vout, txout_addr):
+    txin = CMutableTxIn(COutPoint(txin_txid, txin_vout))
+    txout = CMutableTxOut(amount*COIN, txout_addr.addr.to_scriptPubKey())
+    witness_script = CScriptWitness(redeem_script)
+    witness = CTxInWitness(witness_script)
+    tx = CMutableTransaction(
+            vin=[txin], vout=[txout], witness=witness)
 
 
 def main():
@@ -37,7 +50,8 @@ def main():
         pubkeys.append(pubkey)
         counter = counter + 1
     redeem_script = generate_multisig_redeem_script(pubkeys, m)
-    script_pub_key = CScript([OP_0, sha256(redeem_script).digest()])
+    script_pub_key = CScript(
+            [OP_0, sha256(CScript(redeem_script.stack)).digest()])
     address = P2WSHBitcoinAddress.from_scriptPubKey(script_pub_key)
     counter = 1
     while counter <= len(privkeys):
