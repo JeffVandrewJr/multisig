@@ -1,6 +1,6 @@
 import bitcointx
 from bitcointx.core.script import CScript, CScriptOp, OP_0, OP_CHECKMULTISIG
-from bitcointx.wallet import P2WSHAddress, CBitcoinSecret
+from bitcointx.wallet import P2WSHBitcoinAddress, CBitcoinSecret
 from hashlib import sha256
 import os
 import subprocess
@@ -37,7 +37,7 @@ def main():
         counter = counter + 1
     redeem_script = generate_multisig_redeem_script(pubkeys, m)
     script_pub_key = CScript([OP_0, sha256(redeem_script)])
-    address = P2WSHAddress.from_scriptPubKey(script_pub_key)
+    address = P2WSHBitcoinAddress.from_scriptPubKey(script_pub_key)
     counter = 1
     while counter <= len(privkeys):
         if counter == 1:
