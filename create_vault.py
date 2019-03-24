@@ -23,7 +23,7 @@ def generate_multisig_redeem_script(pubkeys, m):
 
 
 def main():
-    bitcointx.tSelectParams('mainnet')
+    bitcointx.SelectParams('mainnet')
     m = int(input('How many total signatures will be required (aka "m"): '))
     n = int(input('How many total keys do you want to generate (aka "n"): '))
     counter = 0
