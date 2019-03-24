@@ -8,7 +8,7 @@ import subprocess
 
 def generate_multisig_redeem_script(pubkeys, m):
     '''
-    creates m of n multisig redeem script
+    creates hex-encoded m of n multisig redeem script
     pubkeys is a list of pubkeys
     m is the number of signatures required to redeem
     '''
@@ -36,7 +36,7 @@ def main():
         pubkeys.append(pubkey)
         counter = counter + 1
     redeem_script = generate_multisig_redeem_script(pubkeys, m)
-    script_pub_key = CScript([OP_0, sha256(redeem_script)])
+    script_pub_key = CScript([OP_0, sha256(redeem_script).digest()])
     address = P2WSHBitcoinAddress.from_scriptPubKey(script_pub_key)
     counter = 1
     while counter <= len(privkeys):
@@ -49,6 +49,8 @@ def main():
                 'Enter the drive path (ex: /run/media/root/sample): '
                 )
         try:
+            if not path:
+                raise ValueError('Bad Path.')
             with open((os.path.join(path, f'key{counter}')), 'w') as key_file:
                 key_file.write(str(privkeys[(counter - 1)]))
             with open((os.path.join(path, 'address')), 'w') as address_file:
