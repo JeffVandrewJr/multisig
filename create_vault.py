@@ -44,7 +44,8 @@ def main():
         if counter == 1:
             input('Insert a USB Drive. Press any key when complete.')
         else:
-            input('Insert another USB Drive. Press any key when complete.')
+            input('Insert another USB Drive. Press any key when complete or \
+                    press CTL+C to cancel.')
         subprocess.run(['df', '-h'])
         path = input(
                 'Enter the drive path (ex: /run/media/root/sample): '
