@@ -3,6 +3,7 @@ from bitcointx.core.script import CScript, CScriptOp, OP_0, OP_CHECKMULTISIG
 from bitcointx.wallet import P2WSHBitcoinAddress, CBitcoinSecret
 from hashlib import sha256
 import os
+from stat import S_IREAD, S_IRGRP, S_IROTH
 import subprocess
 
 
@@ -43,7 +44,7 @@ def main():
         if counter == 1:
             input('Insert a USB Drive. Press any key when complete.')
         else:
-            input('Insert a new USB Drive. Press any key when complete.')
+            input('Insert another USB Drive. Press any key when complete.')
         subprocess.run(['df', '-h'])
         path = input(
                 'Enter the drive path (ex: /run/media/root/sample): '
@@ -51,14 +52,22 @@ def main():
         try:
             if not path:
                 raise ValueError('Bad Path.')
-            with open((os.path.join(path, f'key{counter}')), 'w') as key_file:
+            keypath = os.path.join(path, f'key{counter}')
+            addresspath = os.path.join(path, 'address')
+            scriptpath = os.path.join(path, 'script')
+            with open(keypath, 'w') as key_file:
                 key_file.write(str(privkeys[(counter - 1)]))
-            with open((os.path.join(path, 'address')), 'w') as address_file:
+            with open(addresspath, 'w') as address_file:
                 address_file.write(str(address))
+            with open(scriptpath, 'w') as script_file:
+                script_file.write(str(redeem_script))
+            for file in [keypath, addresspath, scriptpath]:
+                os.chmod(file, S_IREAD | S_IRGRP | S_IROTH)
         except Exception as e:
             print(e)
             print('Bad path given. Try again.')
             continue
+        subprocess.run(['umount', path])
         counter = counter + 1
     print('Process complete.')
 
