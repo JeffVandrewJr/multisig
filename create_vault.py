@@ -9,7 +9,7 @@ import subprocess
 
 def generate_multisig_redeem_script(pubkeys, m):
     '''
-    creates hex-encoded m of n multisig redeem script
+    creates m of n multisig redeem script
     pubkeys is a list of pubkeys
     m is the number of signatures required to redeem
     '''
