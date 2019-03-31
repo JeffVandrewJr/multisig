@@ -57,10 +57,9 @@ def generate_vault():
     bitcointx.SelectParams('mainnet')
     m = int(input('How many total signatures will be required (aka "m"): '))
     n = int(input('How many total keys do you want to generate (aka "n"): '))
-    counter = 0
     privkeys = []
     pubkeys = []
-    while counter < n:
+    for counter in range(1, n):
         privkey = CBitcoinSecret.from_secret_bytes(os.urandom(32))
         pubkey = privkey.pub
         privkeys.append(privkey)
@@ -70,23 +69,30 @@ def generate_vault():
     script_pub_key = CScript(
             [OP_0, sha256(CScript(redeem_list)).digest()])
     address = P2WSHBitcoinAddress.from_scriptPubKey(script_pub_key)
+    PATH = '/mnt/keys'
+    if not os.path.isdir(PATH):
+        subprocess.run(['mkdir', PATH])
     counter = 1
     while counter <= len(privkeys):
         if counter == 1:
             input('Insert a USB Drive. Press any key when complete.')
         else:
             input('Insert another USB Drive. Press any key when complete or \
-                    press CTL+C to cancel.')
-        subprocess.run(['df', '-h'])
-        path = input(
-                'Enter the drive path (ex: /run/media/root/sample): '
+press CTL+C to cancel.')
+        subprocess.run(['lsblk'])
+        dev = input(
+                'Enter the device and partition of the USB drive (ex: sdb1): '
                 )
+        subprocess.run(
+                ['umount', f'/dev/{dev}'], stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
+        subprocess.run(['mount', f'/dev/{dev}', PATH])
         try:
-            if not path:
+            if not dev:
                 raise ValueError('Bad Path.')
-            keypath = os.path.join(path, f'key{counter}')
-            addresspath = os.path.join(path, 'address')
-            scriptpath = os.path.join(path, 'script')
+            keypath = os.path.join(PATH, f'key{counter}')
+            addresspath = os.path.join(PATH, 'address')
+            scriptpath = os.path.join(PATH, 'script')
             with open(keypath, 'w') as key_file:
                 key_file.write(str(privkeys[(counter - 1)]))
             with open(addresspath, 'w') as address_file:
@@ -99,7 +105,7 @@ def generate_vault():
             print(e)
             print('Bad path given. Try again.')
             continue
-        subprocess.run(['umount', path])
+        subprocess.run(['umount', f'/dev/{dev}'])
         counter = counter + 1
     print('Process complete.')
 
